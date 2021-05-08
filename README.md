@@ -56,7 +56,7 @@ $ ./extract_archived_games.py 'USERNAME' 'PASSWORD' --player-name 'virrevvv' | j
 ]
 ```
 
-You can also parse the `tcnMoves` field into `python-chess` `Move`s using the `decode_tcn` included in this library.
+You can also parse the `tcnMoves` field into `python-chess` `Move`s using the `decode_tcn` function included in this library.
 
 :thumbsup:
 
