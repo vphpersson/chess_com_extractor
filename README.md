@@ -7,8 +7,7 @@ Extract information from Chess.com.
 ### Usage
 
 ```
-$ ./extract_archived_games.py --help
-usage: extract_archived_games.py [-h] [--player-name PLAYER_NAME] username password
+usage: extract_archived_games.py [-h] [--user-agent USER_AGENT] [--player-name PLAYER_NAME] [--game-type GAME_TYPE] [--game-sub-types [GAME_SUB_TYPES ...]] [--num-max-pages NUM_MAX_PAGES] username password
 
 Extract archived games of a player from Chess.com.
 
@@ -16,10 +15,18 @@ positional arguments:
   username              The username with which to authenticate.
   password              The password with which to authenticate.
 
-optional arguments:
+options:
   -h, --help            show this help message and exit
+  --user-agent USER_AGENT
+                        A value to be used as `User-Agent` in the login request.
   --player-name PLAYER_NAME
                         The name of the player whose games to extract. Defaults to the logged-in user.
+  --game-type GAME_TYPE
+                        The game type to extract archived games for.
+  --game-sub-types [GAME_SUB_TYPES ...]
+                        The game sub-types to extract archived games for.
+  --num-max-pages NUM_MAX_PAGES
+                        The maximum number of pages from which to extract games from on Chess.com.
 ```
 
 #### Example
