@@ -1,5 +1,4 @@
 from string import ascii_lowercase, ascii_uppercase, digits
-from typing import Optional
 
 from chess import Move, PieceType, PIECE_SYMBOLS
 
@@ -16,8 +15,8 @@ def decode_tcn(tcn_string: str) -> list[Move]:
         from_value_index: int = TCN_INDEX_STRING.index(tcn_string[i])
         to_value_index: int = TCN_INDEX_STRING.index(tcn_string[i+1])
 
-        promotion: Optional[PieceType] = None
-        drop: Optional[PieceType] = None
+        promotion: PieceType | None = None
+        drop: PieceType | None = None
 
         if to_value_index > 63:
             promotion = PIECE_SYMBOLS.index(TCN_PIECE_INDEX_STRING[(to_value_index - 64) // 3])

@@ -1,6 +1,5 @@
 from logging import getLogger
 from html.parser import HTMLParser
-from typing import Optional
 from re import sub as re_sub
 
 from chess_com_extractor.structures import ArchivedGameEntry
@@ -9,11 +8,10 @@ LOG = getLogger(__name__)
 
 
 class CSRFTokenHTMLParser(HTMLParser):
-
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.csrf_token: Optional[str] = None
+        self.csrf_token: str | None = None
 
     @staticmethod
     def _attr_to_dict(attrs_list: list[tuple[str, str]]) -> dict[str, str]:
@@ -41,8 +39,8 @@ class ArchivedGameEntriesHTMLParser(HTMLParser):
         super().__init__(*args, **kwargs)
 
         self.archived_game_entries: list[ArchivedGameEntry] = []
-        self.num_total_pages: Optional[int] = None
-        self.player_name: Optional[str] = None
+        self.num_total_pages: int | None = None
+        self.player_name: str | None = None
         self._handle_title_data = False
 
     @staticmethod

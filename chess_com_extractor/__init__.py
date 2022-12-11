@@ -1,4 +1,4 @@
-from typing import Iterable, Union, Optional
+from typing import Iterable
 from itertools import count
 
 from httpx import AsyncClient
@@ -11,6 +11,7 @@ from chess_com_extractor.errors import PlayerNotFoundError
 async def login(
     username: str,
     password: str,
+    user_agent: str,
     http_client: AsyncClient
 ) -> str:
     """
@@ -18,8 +19,11 @@ async def login(
 
     The HTTP client should use "https://www.chess.com" as its base URL.
 
+    Note that a `User-Agent` value must be provided, as Chess.com appears to block non-browser `User-Agent` values.
+
     :param username: A username with which to authenticate.
     :param password: A password with which to authenticate.
+    :param user_agent: A value to put in the `User-Agent` header of the login request.
     :param http_client: An HTTP client with which to perform the authentication.
     :return: A CSRF token that can be used in subsequent calls to Chess.com endpoints.
     """
@@ -31,13 +35,15 @@ async def login(
 
     login_response = await http_client.post(
         url='/login_check',
+        headers={'User-Agent': user_agent},
         data={
             '_username': username,
             '_password': password,
             'login': '',
             '_target_path': 'https://www.chess.com',
             '_token': csrf_token
-        }
+        },
+        follow_redirects=True
     )
     login_response.raise_for_status()
 
@@ -46,23 +52,50 @@ async def login(
 
 async def get_archived_game_entries(
     http_client: AsyncClient,
-    player_name: Optional[str] = None
+    player_name: str | None = None,
+    game_type: str | None = 'live',
+    game_sub_types: list[str] | None = None,
+    num_max_pages: int | None = None
+
 ) -> list[ArchivedGameEntry]:
     """
-    Retrieve all archived games.
+    Retrieve archived games.
 
     :param http_client: An HTTP client with which to perform the request.
     :param player_name: The name of the player whose games to retrieve. Defaults to the logged-in user.
+    :param game_type: The game type to retrieve archived game entries for.
+    :param game_sub_types: The game subtypes to retrieve archived entries for.
+    :param num_max_pages: The maximum number of pages to extract archived game entries from.
+
     :return: A list of game entries for all archived games.
     """
 
     all_archived_game_entries: list[ArchivedGameEntry] = []
 
     for page_number in count(start=1, step=1):
+        if page_number > num_max_pages:
+            break
+
         # TODO: I probably should do some kind of sanitation here, but I do not know what characters are allowed.
+
+        params = {
+            'page': page_number,
+            'gameType': game_type,
+            'timeSort': 'desc'
+        }
+
+        if game_sub_types:
+            match game_type:
+                case None:
+                    break
+                case 'live':
+                    params['gameTypeslive[]'] = game_sub_types
+                case _:
+                    raise NotImplementedError(game_type)
+
         archived_games_page_response = await http_client.get(
             url='/games/archive' + (f'/{player_name}' if player_name else ''),
-            params={'page': page_number}
+            params=params
         )
         archived_games_page_response.raise_for_status()
 
@@ -85,7 +118,7 @@ async def get_pgn_info(
     http_client: AsyncClient,
     csrf_token: str,
     as_dict: bool = False
-) -> list[Union[dict[str, Union[str, int]], PGNInfo]]:
+) -> list[dict[str, str | int] | PGNInfo]:
     """
     Return "PGN info" about a provided set of games.
 
@@ -113,6 +146,6 @@ async def get_pgn_info(
     )
     pgn_info_response.raise_for_status()
 
-    json_data_list: list[dict[str, Union[str, int]]] = pgn_info_response.json()
+    json_data_list: list[dict[str, str | int]] = pgn_info_response.json()
 
     return json_data_list if as_dict else [PGNInfo.from_json(json_object=json_data) for json_data in json_data_list]
